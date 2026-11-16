@@ -35,7 +35,7 @@ say() { printf '\n==> %s\n' "$*"; }
 die() { printf '\nError: %s\n' "$*" >&2; exit 1; }
 ask_yes() { local answer; read -rp "$1 [y/N] " answer; [[ $answer =~ ^[Yy]$ ]]; }
 # Name of the program listening on a TCP port, or nothing when the port is free.
-port_owner() { ss -ltnpH "sport = :$1" 2>/dev/null | grep -o 'users:(("[^"]*' | head -1 | cut -d'"' -f2; }
+port_owner() { ss -ltnpH "sport = :$1" 2>/dev/null | grep -o 'users:(("[^"]*' | head -1 | cut -d'"' -f2 || true; }
 
 # ---------- checks ----------
 
