@@ -12,7 +12,7 @@
 #       Own domain. nginx listens on port 80 and the script sets up HTTPS (Let's Encrypt).
 #
 # Re-run the same command after `git pull` to deploy an update.
-# Invoice data in /var/lib/jokoding-invoice and the login are kept.
+# Invoice data in /var/lib/jokoding-invoice is kept.
 #
 # API port: PORT=3200 sudo -E bash deploy/install.sh ...  (default 3100)
 set -euo pipefail
@@ -27,7 +27,6 @@ DATA_FILE="/var/lib/$APP_NAME/invoices.json"
 SERVICE_FILE="/etc/systemd/system/$APP_NAME.service"
 NGINX_SITE="/etc/nginx/sites-available/invoice"
 NGINX_LINK="/etc/nginx/sites-enabled/invoice"
-HTPASSWD="/etc/nginx/.htpasswd-invoice"
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 INSTALL_CMD="sudo bash deploy/install.sh${DOMAIN:+ $DOMAIN}"
 
@@ -111,27 +110,6 @@ done
 curl -fsS "http://127.0.0.1:$PORT/api/health" >/dev/null 2>&1 \
   || die "API is not answering. Check the log: journalctl -u $APP_NAME -n 50"
 echo "API OK"
-
-# ---------- login ----------
-
-if [[ -s $HTPASSWD ]]; then
-  say "Keeping the existing login in $HTPASSWD (delete that file and re-run to reset it)"
-else
-  say "Creating the login for the site"
-  read -rp "Username [admin]: " AUTH_USER
-  AUTH_USER="${AUTH_USER:-admin}"
-  [[ $AUTH_USER != *:* ]] || die "username cannot contain ':'"
-  while true; do
-    read -rsp "Password: " PASS1; echo
-    read -rsp "Repeat password: " PASS2; echo
-    [[ -n $PASS1 && $PASS1 == "$PASS2" ]] && break
-    echo "Passwords are empty or different. Try again."
-  done
-  printf '%s:%s\n' "$AUTH_USER" "$(printf '%s' "$PASS1" | openssl passwd -apr1 -stdin)" > "$HTPASSWD"
-  unset PASS1 PASS2
-  chown root:www-data "$HTPASSWD"
-  chmod 640 "$HTPASSWD"
-fi
 
 # ---------- nginx ----------
 

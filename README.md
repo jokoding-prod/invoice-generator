@@ -47,17 +47,17 @@ The script:
 1. Installs nginx (and Node.js 24 from NodeSource, after asking, when Node 18+ is missing).
 2. Copies the web app to `/var/www/jokoding-invoice` and the API to `/opt/jokoding-invoice`.
 3. Installs the systemd service `jokoding-invoice` on `127.0.0.1:3100` (change with `PORT=3200 sudo -E bash ...`). Data goes to `/var/lib/jokoding-invoice/invoices.json`.
-4. Asks for a username and password (nginx basic auth). The login is required: the ngrok URL is public, and the API returns client names, phone numbers and bank details.
+4. Serves the site and API without a login. Anyone with the public URL can access invoice records, including client names, phone numbers and bank details. Use only if that exposure is acceptable.
 5. Writes the nginx site from `deploy/nginx.conf` to `/etc/nginx/sites-available/invoice` (the old one is kept as `.bak-<date>`). With a domain, it also sets up or re-applies the Let's Encrypt certificate.
 
-To update: `git pull`, then run the same install command again. Data and login are kept.
+To update: `git pull`, then run the same install command again. Invoice data is kept.
 
 Useful commands:
 
 ```bash
 journalctl -u jokoding-invoice -f                                   # API logs
 sudo cp /var/lib/jokoding-invoice/invoices.json ~/invoices-$(date +%F).json  # backup
-sudo rm /etc/nginx/.htpasswd-invoice && sudo bash deploy/install.sh  # reset login
+sudo nginx -t && sudo systemctl reload nginx                         # validate/reload nginx
 ```
 
 **Backup (.json)** and **Restore** in the app still work and go through the server.
